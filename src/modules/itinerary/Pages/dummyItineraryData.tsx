@@ -1,6 +1,6 @@
-import { createContext, useContext, useState } from "react"
+import { useState } from "react"
 import type { Itinerary, Activity, ItineraryContextType } from "../Stores/Types"
-const ItineraryContext = createContext<ItineraryContextType | undefined>(undefined)
+import { ItineraryContext } from "./iteneraryContext"
 
 // Mock data
 const mockItineraries: Itinerary[] = [
@@ -137,12 +137,4 @@ export function ItineraryProvider({ children }: { children: React.ReactNode }) {
       {children}
     </ItineraryContext.Provider>
   )
-}
-
-export function useItinerary() {
-  const context = useContext(ItineraryContext)
-  if (context === undefined) {
-    throw new Error("useItinerary must be used within an ItineraryProvider")
-  }
-  return context
 }

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
 import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
@@ -6,7 +6,8 @@ import { Label } from "../../../components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
 import { Textarea } from "../../../components/ui/textarea" 
 import { Badge } from "../../../components/ui/badge"
-import { useItinerary} from "../../../modules/itinerary/Pages/ItineraryProvider"
+import { useItinerary } from "../Stores/iteneraryHook"
+import { ItineraryPreviewModal } from "./iteneraryPriview"
 import { 
   Plus, 
   MapPin, 
@@ -16,12 +17,19 @@ import {
   Save,
   Eye,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ArrowLeft
 } from "lucide-react"
-import type { Activity, Day } from "../Stores/Types"
+import type { Activity, Day, Itinerary } from "../Stores/Types"
 
-export function ItineraryCreatorPage() {
-  const { createItinerary } = useItinerary()
+interface ItineraryCreatorPageProps {
+  editItinerary?: Itinerary
+  onBack?: () => void
+  onSave?: () => void
+}
+
+export function ItineraryCreatorPage({ editItinerary, onBack, onSave }: ItineraryCreatorPageProps) {
+  const { createItinerary, updateItinerary } = useItinerary()
   const [currentStep, setCurrentStep] = useState<'overview' | 'planning'>('overview')
   const [expandedDay, setExpandedDay] = useState<string | null>(null)
   
@@ -49,15 +57,33 @@ export function ItineraryCreatorPage() {
     description: ''
   })
 
+  // Load existing itinerary for editing
+  useEffect(() => {
+    if (editItinerary) {
+      setOverview({
+        title: editItinerary.title,
+        destination: editItinerary.destination,
+        duration: editItinerary.duration,
+        travelers: editItinerary.travelers,
+        travelType: editItinerary.travelType,
+        hotelCategory: editItinerary.hotelCategory
+      })
+      setDays(editItinerary.days)
+      setCurrentStep('planning') // Skip to planning if editing
+    }
+  }, [editItinerary])
+
   const handleOverviewSubmit = () => {
-    // Create initial days array
-    const initialDays: Day[] = Array.from({ length: overview.duration }, (_, index) => ({
-      id: `day-${index + 1}`,
-      date: '',
-      destination: '',
-      activities: []
-    }))
-    setDays(initialDays)
+    // Create initial days array if not editing
+    if (!editItinerary) {
+      const initialDays: Day[] = Array.from({ length: overview.duration }, (_, index) => ({
+        id: `day-${index + 1}`,
+        date: '',
+        destination: '',
+        activities: []
+      }))
+      setDays(initialDays)
+    }
     setCurrentStep('planning')
   }
 
@@ -112,7 +138,20 @@ export function ItineraryCreatorPage() {
       },
       isPublic: true
     }
-    createItinerary(itinerary)
+    
+    if (editItinerary) {
+      updateItinerary(editItinerary.id, itinerary)
+    } else {
+      createItinerary(itinerary)
+    }
+    
+    onSave?.()
+  }
+
+  // Create preview data
+  const previewItinerary = {
+    ...overview,
+    days
   }
 
   return (
@@ -120,10 +159,21 @@ export function ItineraryCreatorPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Create Your Itinerary</h1>
-          <p className="text-muted-foreground">
-            Plan your perfect trip step by step
-          </p>
+          <div className="flex items-center gap-4 mb-4">
+            {onBack && (
+              <Button variant="ghost" size="icon" onClick={onBack}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            )}
+            <div>
+              <h1 className="text-3xl font-bold mb-2">
+                {editItinerary ? 'Edit Itinerary' : 'Create Your Itinerary'}
+              </h1>
+              <p className="text-muted-foreground">
+                {editItinerary ? 'Update your travel plan' : 'Plan your perfect trip step by step'}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Progress Steps */}
@@ -233,6 +283,29 @@ export function ItineraryCreatorPage() {
 
         {currentStep === 'planning' && (
           <div className="space-y-6">
+            {/* Back to Overview Button */}
+            <div className="flex justify-between items-center">
+              <Button 
+                variant="outline" 
+                onClick={() => setCurrentStep('overview')}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Overview
+              </Button>
+              
+              {/* Preview Button */}
+              <ItineraryPreviewModal 
+                itinerary={previewItinerary}
+                trigger={
+                  <Button variant="outline">
+                    <Eye className="mr-2 h-4 w-4" />
+                    Preview Itinerary
+                  </Button>
+                }
+              />
+            </div>
+
             {days.map((day, index) => (
               <Card key={day.id}>
                 <CardHeader>
@@ -414,12 +487,17 @@ export function ItineraryCreatorPage() {
             <div className="flex gap-4">
               <Button onClick={handleSaveItinerary} className="flex-1">
                 <Save className="mr-2 h-4 w-4" />
-                Save Itinerary
+                {editItinerary ? 'Update Itinerary' : 'Save Itinerary'}
               </Button>
-              <Button variant="outline" className="flex-1">
-                <Eye className="mr-2 h-4 w-4" />
-                Preview
-              </Button>
+              <ItineraryPreviewModal 
+                itinerary={previewItinerary}
+                trigger={
+                  <Button variant="outline" className="flex-1">
+                    <Eye className="mr-2 h-4 w-4" />
+                    Preview
+                  </Button>
+                }
+              />
             </div>
           </div>
         )}

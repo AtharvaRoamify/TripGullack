@@ -6,9 +6,9 @@ import { LoginPage } from "../src/Auth/Pages/LoginPage";
 import { SignupPage } from "../src/Auth/Pages/SignupPage";
 import { ExplorePage } from "./MainPages/ExplorePage";
 import { ItineraryCreatorPage } from "../src/modules/itinerary/Pages/ItineraryCreatorPage";
-import {AuthProvider, useAuth} from "./Auth/Store/AuthHook";
-import { ItineraryProvider } from "./modules/itinerary/Pages/ItineraryProvider";
-
+import { AuthProvider, useAuth } from "./Auth/Store/AuthHook";
+import { ItineraryProvider } from "./modules/itinerary/Pages/dummyItineraryData"; // Fixed import path
+import { ItineraryContainer } from "./modules/itinerary/Pages/iteneraryContainer"
 // Inner component that uses the auth context
 function AppContent() {
   const { loading } = useAuth();
@@ -30,7 +30,8 @@ function AppContent() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/explore" element={<ExplorePage />} />
-        <Route path="/create" element={<ItineraryCreatorPage />} />
+        <Route path="/create" element={<ItineraryContainer  />} />
+        <Route path="/create/add" element={<ItineraryCreatorPage />} />
       </Routes>
     </div>
   );
