@@ -86,6 +86,8 @@ const mockItineraries: Itinerary[] = [
   }
 ]
 
+
+
 export function ItineraryProvider({ children }: { children: React.ReactNode }) {
   const [itineraries] = useState<Itinerary[]>(mockItineraries)
   const [currentItinerary, setCurrentItinerary] = useState<Itinerary | null>(null)
@@ -93,6 +95,11 @@ export function ItineraryProvider({ children }: { children: React.ReactNode }) {
   const createItinerary = (itineraryData: Omit<Itinerary, 'id' | 'createdAt' | 'author'>) => {
     // In a real app, this would make an API call
     console.log("Creating itinerary:", itineraryData)
+  }
+
+  const getAllItineraries = (): Itinerary[] => {
+    
+    return itineraries
   }
 
   const updateItinerary = (id: string, updates: Partial<Itinerary>) => {
